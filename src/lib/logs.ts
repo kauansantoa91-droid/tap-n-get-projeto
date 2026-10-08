@@ -30,14 +30,12 @@ export const logAccess = createServerFn({ method: "POST" }).handler(async () => 
     let source = "Direto";
     try {
       if (ref) source = new URL(ref).hostname;
-    } catch {
-      // Ignora erro de parsing de URL inválida
-    }
+    } catch {}
 
     const sb = await serverClient();
     if (!sb) {
-      console.error("[logAccess] Cliente Supabase não inicializado. Verifique SUPABASE_SERVICE_ROLE_KEY.");
-      return { ok: false, error: "Supabase client indisponível" };
+      console.error("[logAccess] Supabase admin indisponível.");
+      return { ok: false };
     }
 
     const { error: insertError } = await sb.from("access_logs").insert({
@@ -48,19 +46,14 @@ export const logAccess = createServerFn({ method: "POST" }).handler(async () => 
     });
 
     if (insertError) {
-      console.error("[logAccess] Falha ao inserir em access_logs:", insertError);
+      console.error("[logAccess] Erro ao gravar access_logs:", insertError);
     }
 
-    // Tenta incrementar o contador, mas não bloqueia a execução caso a RPC não exista
-    const { error: rpcError } = await sb.rpc("increment_counter", { _key: "access" });
-    if (rpcError) {
-      console.warn("[logAccess] RPC increment_counter não configurada:", rpcError.message);
-    }
-
+    await sb.rpc("increment_counter", { _key: "access" });
     return { ok: true };
   } catch (err) {
-    console.error("[logAccess] Erro inesperado:", err);
-    return { ok: false, error: String(err) };
+    console.error("[logAccess] Exceção:", err);
+    return { ok: false };
   }
 });
 
@@ -74,30 +67,25 @@ export const logDownload = createServerFn({ method: "POST" })
       const sb = await serverClient();
 
       if (!sb) {
-        console.error("[logDownload] Cliente Supabase não inicializado. Verifique SUPABASE_SERVICE_ROLE_KEY.");
-        return { ok: false, error: "Supabase client indisponível" };
+        console.error("[logDownload] Supabase admin indisponível.");
+        return { ok: false };
       }
 
       const { error: insertError } = await sb.from("download_logs").insert({
         ip: clientIp(h),
         user_agent: ua,
         device: parseDevice(ua),
-        filename: String(data?.filename ?? "desconhecido").slice(0, 200),
+        filename: String(data?.filename ?? "apk").slice(0, 200),
       });
 
       if (insertError) {
-        console.error("[logDownload] Falha ao inserir em download_logs:", insertError);
+        console.error("[logDownload] Erro ao gravar download_logs:", insertError);
       }
 
-      // Tenta incrementar o contador
-      const { error: rpcError } = await sb.rpc("increment_counter", { _key: "download" });
-      if (rpcError) {
-        console.warn("[logDownload] RPC increment_counter não configurada:", rpcError.message);
-      }
-
+      await sb.rpc("increment_counter", { _key: "download" });
       return { ok: true };
     } catch (err) {
-      console.error("[logDownload] Erro inesperado:", err);
-      return { ok: false, error: String(err) };
+      console.error("[logDownload] Exceção:", err);
+      return { ok: false };
     }
   });
