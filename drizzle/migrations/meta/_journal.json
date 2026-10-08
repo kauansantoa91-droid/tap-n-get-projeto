@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791412725410,
+      "tag": "0000_apks_bucket_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791413883595,
+      "tag": "0001_apk_logs_and_meta",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791414130485,
+      "tag": "0002_lock_down_admin_data",
+      "breakpoints": true
+    }
+  ]
+}
